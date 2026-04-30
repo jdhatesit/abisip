@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AB InBev Master Synergy Engine</title>
+    <style>
+        :root {
+            --primary: #c41230; 
+            --dark: #0b1120;
+            --surface: #1e293b;
+            --surface-hover: #334155;
+            --light: #f8fafc;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --border: #334155;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --push: #8b5cf6; 
+            --pull: #06b6d4; 
+        }
+
+        * { box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+
+        body {
+            background-color: var(--dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 30px 40px;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .header h1 { margin: 0; color: var(--light); font-size: 2rem; letter-spacing: -0.5px; }
+        .header .subtitle { color: var(--primary); font-size: 0.95rem; text-transform: uppercase; font-weight: 800; letter-spacing: 1.5px; }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 30px;
+        }
+
+        /* Left Panel */
+        .metrics-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: sticky;
+            top: 30px;
+            height: fit-content;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .metric-group {
+            background: rgba(0,0,0,0.25);
+            padding: 18px;
+            border-radius: 10px;
+            border-left: 4px solid transparent;
+        }
+
+        .mg-push { border-color: var(--push); }
+        .mg-pull { border-color: var(--pull); }
+
+        .metric-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 5px; }
+        .metric-val { font-size: 1.9rem; font-weight: 900; color: var(--light); }
+        .sub-val { font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; display: flex; justify-content: space-between; font-weight: 500;}
+
+        .budget-input-group input {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            color: var(--success);
+            font-size: 1.6rem;
+            font-weight: 800;
+            padding: 12px 15px;
+            border-radius: 8px;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .budget-input-group input:focus { outline: none; border-color: var(--success); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
+
+        /* Insight Engine Box */
+        .insight-box {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: var(--light);
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .insight-icon { font-size: 1.5rem; }
+
+        /* Right Panel */
+        .asset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .asset-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 22px;
+            transition: all 0.2s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .asset-card:hover { border-color: #64748b; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .asset-card.type-push { border-top: 4px solid var(--push); }
+        .asset-card.type-pull { border-top: 4px solid var(--pull); }
+
+        .asset-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .asset-title-group { display: flex; align-items: center; gap: 15px; }
+        .asset-icon { font-size: 1.8rem; background: var(--dark); padding: 12px; border-radius: 10px; border: 1px solid var(--border); }
+        .asset-title { margin: 0 0 5px 0; font-size: 1.1rem; font-weight: 700; color: var(--light); line-height: 1.2; }
+        .asset-cost { color: var(--warning); font-weight: 800; font-size: 1rem; font-family: monospace;}
+        
+        .type-badge { font-size: 0.65rem; padding: 4px 10px; border-radius: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-push { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
+        .badge-pull { background: rgba(6, 182, 212, 0.15); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.3); }
+
+        .asset-stats {
+            background: var(--dark);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .stat-highlight { color: var(--light); font-weight: 700; }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.3);
+            padding: 6px 6px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .btn-qty { background: var(--surface); border: 1px solid var(--border); color: var(--light); width: 40px; height: 40px; border-radius: 8px; font-size: 1.4rem; font-weight: 300; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s;}
+        .btn-qty:hover:not(:disabled) { background: var(--surface-hover); }
+        .btn-qty:disabled { opacity: 0.2; cursor: not-allowed; }
+        .qty-display { font-size: 1.4rem; font-weight: 900; color: var(--light); min-width: 40px; text-align: center; }
+        
+        .limit-warning { color: var(--warning); font-size: 0.75rem; text-align: center; margin-top: 10px; height: 14px; font-weight: 600;}
+        .limit-reached { color: var(--danger); }
+
+        /* Final ROI Box */
+        .roi-box {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 182, 212, 0.15));
+            border: 1px solid var(--success);
+            padding: 22px;
+            border-radius: 10px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .roi-box::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--success);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>
+            <h1>Master Deployment Engine</h1>
+            <div class="subtitle">Push/Pull Synergy • Haryana Market Simulation</div>
+        </div>
+        <div style="text-align: right;">
+            <div class="subtitle" style="color: var(--text-muted);">Baseline Metric</div>
+            <div style="font-weight: 900; font-size: 1.3rem; color: var(--success);">₹1,500 / Premium Case</div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Left Panel: Live Analytics -->
+        <div class="metrics-panel">
+            <div class="budget-input-group">
+                <div class="metric-label">Annual Capital Budget (₹)</div>
+                <input type="number" id="totalBudget" value="1000000" step="50000" min="0" onchange="calculate()">
+            </div>
+            
+            <div class="sub-val" style="margin-top:-10px; font-size: 1rem;">
+                <span>Remaining: <strong id="remainingVal" style="color:var(--success);">₹1,000,000</strong></span>
+                <span>Spent: <strong id="spentVal">₹0</strong></span>
+            </div>
+
+            <div class="metric-group mg-push">
+                <div class="metric-label">Secured Base (Stocking / Push)</div>
+                <div class="metric-val" id="baseVolVal" style="color: #a78bfa;">5,000 <span style="font-size:1rem; color:var(--text-muted); font-weight: 600;">Cases</span></div>
+                <div class="sub-val">
+                    <span>Organic: 5,000</span>
+                    <span>Incentivized: <strong id="pushIncentiveVal" style="color:var(--light);">+0</strong></span>
+                </div>
+            </div>
+
+            <div class="metric-group mg-pull">
+                <div class="metric-label">Asset Uplift (Visibility / Pull)</div>
+                <div class="metric-val" id="assetUpliftVal" style="color: #22d3ee;">+0 <span style="font-size:1rem; color:var(--text-muted); font-weight: 600;">Cases</span></div>
+                <div class="sub-val">
+                    <span>Visibility Multiplier: <strong id="multiplierVal" style="color:var(--light);">1.00x</strong></span>
+                    <span>SP Mix Shift: <strong id="spShiftVal" style="color:var(--warning);">+0.00%</strong></span>
+                </div>
+            </div>
+
+            <!-- Algorithmic Insight -->
+            <div class="insight-box" id="insightBox">
+                <div class="insight-icon">💡</div>
+                <div id="insightText">Allocate capital to see real-time strategic analysis of your Push/Pull ratio.</div>
+            </div>
+
+            <div class="roi-box">
+                <div class="metric-label">Projected Final Volume</div>
+                <div class="metric-val" id="totalVolVal" style="font-size: 2.8rem;">5,000</div>
+                <hr style="border-color: rgba(255,255,255,0.1); margin: 18px 0;">
+                <div class="metric-label">Net Financial ROI</div>
+                <div class="metric-val" id="roiVal" style="color: var(--success);">0.0%</div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Smart Asset Grid -->
+        <div class="asset-grid" id="assetContainer">
+            <!-- Populated via JS -->
+        </div>
+    </div>
+
+<script>
+    // CORE DATA MODEL (With strict Market Caps and Decay Rates)
+    const ORGANIC_BASE_VOLUME = 5000;
+    const PROFIT_PER_CASE = 1500;
+    const MARKET_SIZE = 117; // Strict Haryana Tracker size
+
+    const assets = [
+        // PUSH (Base Volume)
+        { id: 'bud4trade', type: 'push', name: 'Bud4Trade Payout (100cs)', cost: 4800, yield: 100, spShift: 0.1, max: 117, decay: 1.0, icon: '💵', qty: 0 },
+        { id: 'trip', type: 'push', name: 'Intl. Match Trip Reward', cost: 500000, yield: 1500, spShift: 5.0, max: 5, decay: 0.9, icon: '✈️', qty: 0 },
+        
+        // PULL (Multipliers)
+        { id: 'chiller', type: 'pull', name: 'Premium Chiller', cost: 40000, yield: 0.12, spShift: 0.5, max: 50, decay: 0.95, icon: '❄️', qty: 0 },
+        { id: 'booth', type: 'pull', name: 'Hoegaarden Booth', cost: 50000, yield: 0.08, spShift: 2.5, max: 20, decay: 0.92, icon: '🏪', qty: 0 },
+        { id: 'neon', type: 'pull', name: 'Neon Sign + Install', cost: 15000, yield: 0.05, spShift: 0.2, max: 80, decay: 0.96, icon: '💡', qty: 0 },
+        { id: 'mask', type: 'pull', name: 'Corona Chiller Mask', cost: 15000, yield: 0.03, spShift: 1.5, max: 40, decay: 0.94, icon: '🛡️', qty: 0 },
+        { id: 'wc', type: 'pull', name: 'World Cup Campaign', cost: 8500, yield: 0.04, spShift: 0.1, max: 80, decay: 0.98, icon: '🏆', qty: 0 },
+        { id: 'trolley', type: 'pull', name: 'Branded Trolley', cost: 5000, yield: 0.02, spShift: 0.8, max: 60, decay: 0.97, icon: '🛒', qty: 0 }
+    ];
+
+    function init() {
+        const container = document.getElementById('assetContainer');
+        
+        assets.forEach((asset, index) => {
+            const el = document.createElement('div');
+            el.className = `asset-card type-${asset.type}`;
+            
+            const badgeClass = asset.type === 'push' ? 'badge-push' : 'badge-pull';
+            const badgeText = asset.type === 'push' ? 'Stocking (Push)' : 'Visibility (Pull)';
+            
+            let statHtml = asset.type === 'push' 
+                ? `<div>Base Injection:<br><span class="stat-highlight">+${asset.yield} Cases</span></div>`
+                : `<div>Base Multiplier:<br><span class="stat-highlight">+${(asset.yield * 100).toFixed(0)}%</span></div>`;
+
+            el.innerHTML = `
+                <div>
+                    <div class="asset-header">
+                        <div class="asset-title-group">
+                            <div class="asset-icon">${asset.icon}</div>
+                            <div>
+                                <h3 class="asset-title">${asset.name}</h3>
+                                <div class="asset-cost">₹${asset.cost.toLocaleString('en-IN')}</div>
+                            </div>
+                        </div>
+                        <div class="type-badge ${badgeClass}">${badgeText}</div>
+                    </div>
+                    
+                    <div class="asset-stats">
+                        ${statHtml}
+                        <div>SP Shift:<br><span class="stat-highlight">+${asset.spShift}%</span></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="controls">
+                        <button class="btn-qty" id="sub-${index}" onclick="updateQty(${index}, -1)">-</button>
+                        <div class="qty-display" id="qty-${index}">0</div>
+                        <button class="btn-qty" id="add-${index}" onclick="updateQty(${index}, 1)">+</button>
+                    </div>
+                    <div class="limit-warning" id="warn-${index}">Max Capacity: ${asset.max}</div>
+                </div>
+            `;
+            container.appendChild(el);
+        });
+        calculate();
+    }
+
+    function updateQty(index, change) {
+        const asset = assets[index];
+        const newQty = asset.qty + change;
+        
+        if (newQty >= 0 && newQty <= asset.max) {
+            asset.qty = newQty;
+            document.getElementById(`qty-${index}`).innerText = asset.qty;
+            calculate();
+        }
+    }
+
+    function generateInsight(spentPush, spentPull, totalSpent) {
+        const box = document.getElementById('insightBox');
+        const text = document.getElementById('insightText');
+        const icon = document.querySelector('.insight-icon');
+
+        if (totalSpent === 0) {
+            text.innerText = "Allocate capital to see real-time strategic analysis of your Push/Pull ratio.";
+            box.style.borderColor = "var(--border)";
+            icon.innerText = "💡";
+            return;
+        }
+
+        const pushRatio = spentPush / totalSpent;
+        const pullRatio = spentPull / totalSpent;
+
+        if (pullRatio > 0.7) {
+            text.innerHTML = "<strong>High Visibility Risk:</strong> You are over-leveraged on Pull assets. Visibility is high, but outlets lack incentivized stock to meet demand.";
+            box.style.borderColor = "var(--warning)";
+            icon.innerText = "⚠️";
+        } else if (pushRatio > 0.7) {
+            text.innerHTML = "<strong>High Stocking Risk:</strong> You are over-leveraged on Push assets. Stock is secure, but lack of visibility assets will lead to slow off-take.";
+            box.style.borderColor = "var(--warning)";
+            icon.innerText = "⚠️";
+        } else {
+            text.innerHTML = "<strong>Optimal Synergy:</strong> Capital is effectively balanced between securing baseline availability and driving consumer visibility.";
+            box.style.borderColor = "var(--success)";
+            icon.innerText = "✅";
+        }
+    }
+
+    function calculate() {
+        const totalBudget = parseInt(document.getElementById('totalBudget').value) || 0;
+        let spent = 0;
+        let spentPush = 0;
+        let spentPull = 0;
+        
+        let pushVolume = 0;
+        let pullMultiplier = 0;
+        let totalSpShift = 0;
+
+        assets.forEach((asset, index) => {
+            const assetSpent = asset.cost * asset.qty;
+            spent += assetSpent;
+            
+            if (asset.type === 'push') spentPush += assetSpent;
+            if (asset.type === 'pull') spentPull += assetSpent;
+            
+            if (asset.qty > 0) {
+                if (asset.type === 'push') {
+                    for (let i = 0; i < asset.qty; i++) { pushVolume += asset.yield * Math.pow(asset.decay, i); }
+                } else {
+                    for (let i = 0; i < asset.qty; i++) { pullMultiplier += asset.yield * Math.pow(asset.decay, i); }
+                }
+                for (let i = 0; i < asset.qty; i++) { totalSpShift += asset.spShift * Math.pow(0.95, i); }
+            }
+
+            // Warning Logic
+            const warnEl = document.getElementById(`warn-${index}`);
+            if (asset.qty === asset.max) {
+                warnEl.innerText = "MARKET SATURATED";
+                warnEl.className = "limit-warning limit-reached";
+            } else if (asset.qty > 0 && Math.pow(asset.decay, asset.qty) < 0.6) {
+                warnEl.innerText = "Warning: Severe ROI Decay";
+                warnEl.className = "limit-warning limit-reached";
+            } else {
+                warnEl.innerText = `Max Capacity: ${asset.max}`;
+                warnEl.className = "limit-warning";
+            }
+        });
+
+        // Synergy Math
+        const securedBaseVolume = ORGANIC_BASE_VOLUME + pushVolume;
+        const totalMultiplier = 1 + pullMultiplier;
+        const finalVolume = securedBaseVolume * totalMultiplier;
+        const assetDrivenUplift = finalVolume - securedBaseVolume;
+        const netIncrementalVolume = finalVolume - ORGANIC_BASE_VOLUME;
+
+        // UI Updates
+        const remaining = totalBudget - spent;
+        document.getElementById('spentVal').innerText = `₹${spent.toLocaleString('en-IN')}`;
+        const remEl = document.getElementById('remainingVal');
+        remEl.innerText = `₹${remaining.toLocaleString('en-IN')}`;
+        remEl.style.color = remaining >= 0 ? 'var(--success)' : 'var(--danger)';
+
+        document.getElementById('baseVolVal').innerHTML = `${Math.round(securedBaseVolume).toLocaleString('en-IN')} <span style="font-size:1rem; color:var(--text-muted); font-weight:600;">Cases</span>`;
+        document.getElementById('pushIncentiveVal').innerText = `+${Math.round(pushVolume).toLocaleString('en-IN')}`;
+        
+        document.getElementById('assetUpliftVal').innerHTML = `+${Math.round(assetDrivenUplift).toLocaleString('en-IN')} <span style="font-size:1rem; color:var(--text-muted); font-weight:600;">Cases</span>`;
+        document.getElementById('multiplierVal').innerText = `${totalMultiplier.toFixed(2)}x`;
+        document.getElementById('spShiftVal').innerText = `+${totalSpShift.toFixed(2)}%`;
+
+        document.getElementById('totalVolVal').innerText = Math.round(finalVolume).toLocaleString('en-IN');
+
+        generateInsight(spentPush, spentPull, spent);
+
+        // ROI
+        let roi = 0;
+        if (spent > 0) {
+            const projectedRevenue = netIncrementalVolume * PROFIT_PER_CASE;
+            roi = ((projectedRevenue - spent) / spent) * 100;
+        }
+
+        const roiEl = document.getElementById('roiVal');
+        roiEl.innerText = `${roi.toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1})}%`;
+        roiEl.style.color = roi < 0 ? 'var(--danger)' : 'var(--success)';
+
+        // Constraints
+        assets.forEach((asset, index) => {
+            document.getElementById(`add-${index}`).disabled = (asset.cost > remaining || asset.qty >= asset.max);
+            document.getElementById(`sub-${index}`).disabled = (asset.qty === 0);
+        });
+    }
+
+    window.onload = init;
+</script>
+
+</body>
+</html>
