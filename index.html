@@ -199,12 +199,11 @@
         </div>
         <div style="text-align: right;">
             <div class="subtitle" style="color: var(--text-muted);">Baseline Metric</div>
-            <div style="font-weight: 900; font-size: 1.3rem; color: var(--success);">₹1,500 / Premium Case</div>
+            <div style="font-weight: 900; font-size: 1.3rem; color: var(--success);">₹48 / Premium Case</div>
         </div>
     </div>
 
     <div class="dashboard-grid">
-        <!-- Left Panel: Live Analytics -->
         <div class="metrics-panel">
             <div class="budget-input-group">
                 <div class="metric-label">Annual Capital Budget (₹)</div>
@@ -234,7 +233,6 @@
                 </div>
             </div>
 
-            <!-- Algorithmic Insight -->
             <div class="insight-box" id="insightBox">
                 <div class="insight-icon">💡</div>
                 <div id="insightText">Allocate capital to see real-time strategic analysis of your Push/Pull ratio.</div>
@@ -249,16 +247,16 @@
             </div>
         </div>
 
-        <!-- Right Panel: Smart Asset Grid -->
         <div class="asset-grid" id="assetContainer">
-            <!-- Populated via JS -->
-        </div>
+            </div>
     </div>
 
 <script>
     // CORE DATA MODEL (With strict Market Caps and Decay Rates)
     const ORGANIC_BASE_VOLUME = 5000;
-    const PROFIT_PER_CASE = 1500;
+    
+    // Updated Profit Per Case to 48 INR
+    const PROFIT_PER_CASE = 48; 
     const MARKET_SIZE = 117; // Strict Haryana Tracker size
 
     const assets = [
@@ -270,7 +268,10 @@
         { id: 'chiller', type: 'pull', name: 'Premium Chiller', cost: 40000, yield: 0.12, spShift: 0.5, max: 50, decay: 0.95, icon: '❄️', qty: 0 },
         { id: 'booth', type: 'pull', name: 'Hoegaarden Booth', cost: 50000, yield: 0.08, spShift: 2.5, max: 20, decay: 0.92, icon: '🏪', qty: 0 },
         { id: 'neon', type: 'pull', name: 'Neon Sign + Install', cost: 15000, yield: 0.05, spShift: 0.2, max: 80, decay: 0.96, icon: '💡', qty: 0 },
-        { id: 'mask', type: 'pull', name: 'Corona Chiller Mask', cost: 15000, yield: 0.03, spShift: 1.5, max: 40, decay: 0.94, icon: '🛡️', qty: 0 },
+        
+        // Updated Corona Chiller Mask Cost to 100,000 INR
+        { id: 'mask', type: 'pull', name: 'Corona Chiller Mask', cost: 100000, yield: 0.03, spShift: 1.5, max: 40, decay: 0.94, icon: '🛡️', qty: 0 },
+        
         { id: 'wc', type: 'pull', name: 'World Cup Campaign', cost: 8500, yield: 0.04, spShift: 0.1, max: 80, decay: 0.98, icon: '🏆', qty: 0 },
         { id: 'trolley', type: 'pull', name: 'Branded Trolley', cost: 5000, yield: 0.02, spShift: 0.8, max: 60, decay: 0.97, icon: '🛒', qty: 0 }
     ];
