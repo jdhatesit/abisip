@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AB InBev Master Synergy Engine</title>
+    <title>AB InBev | Portfolio Optimization Engine</title>
     <style>
         :root {
             --primary: #c41230; 
@@ -20,6 +20,8 @@
             --text-muted: #94a3b8;
             --push: #8b5cf6; 
             --pull: #06b6d4; 
+            --premium: #ef4444; 
+            --super-premium: #f59e0b; 
         }
 
         * { box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
@@ -46,11 +48,10 @@
 
         .dashboard-grid {
             display: grid;
-            grid-template-columns: 400px 1fr;
+            grid-template-columns: 420px 1fr;
             gap: 30px;
         }
 
-        /* Left Panel */
         .metrics-panel {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -58,7 +59,7 @@
             padding: 25px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
             position: sticky;
             top: 30px;
             height: fit-content;
@@ -67,25 +68,30 @@
 
         .metric-group {
             background: rgba(0,0,0,0.25);
-            padding: 18px;
+            padding: 15px;
             border-radius: 10px;
             border-left: 4px solid transparent;
         }
 
-        .mg-push { border-color: var(--push); }
-        .mg-pull { border-color: var(--pull); }
+        .mg-split { border-color: var(--success); }
 
         .metric-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 5px; }
-        .metric-val { font-size: 1.9rem; font-weight: 900; color: var(--light); }
+        .metric-val { font-size: 1.6rem; font-weight: 900; color: var(--light); }
         .sub-val { font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; display: flex; justify-content: space-between; font-weight: 500;}
+
+        .budget-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
 
         .budget-input-group input {
             background: var(--dark);
             border: 1px solid var(--border);
             color: var(--success);
-            font-size: 1.6rem;
+            font-size: 1.2rem;
             font-weight: 800;
-            padding: 12px 15px;
+            padding: 10px 15px;
             border-radius: 8px;
             width: 100%;
             transition: all 0.3s;
@@ -93,23 +99,53 @@
 
         .budget-input-group input:focus { outline: none; border-color: var(--success); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
 
-        /* Insight Engine Box */
-        .insight-box {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--border);
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            color: var(--light);
+        #profitPerCase { color: var(--success); }
+        #organicBase { color: var(--info); }
+        #organicSPMix { color: var(--super-premium); }
+
+        .switch-container {
             display: flex;
-            gap: 12px;
-            align-items: flex-start;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.3);
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--info);
         }
+        
+        .switch-text { display: flex; flex-direction: column; }
+        .switch-title { font-size: 0.9rem; font-weight: 700; color: var(--light); }
+        .switch-sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
 
-        .insight-icon { font-size: 1.5rem; }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--border);
+            transition: .3s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--info); }
+        input:checked + .slider:before { transform: translateX(20px); }
 
-        /* Right Panel */
         .asset-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -120,7 +156,7 @@
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 22px;
+            padding: 20px;
             transition: all 0.2s;
             position: relative;
             display: flex;
@@ -129,18 +165,27 @@
         }
 
         .asset-card:hover { border-color: #64748b; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-        .asset-card.type-push { border-top: 4px solid var(--push); }
-        .asset-card.type-pull { border-top: 4px solid var(--pull); }
+        .asset-card.focus-all { border-top: 4px solid var(--info); }
+        .asset-card.focus-premium { border-top: 4px solid var(--premium); }
+        .asset-card.focus-super-premium { border-top: 4px solid var(--super-premium); }
 
-        .asset-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
-        .asset-title-group { display: flex; align-items: center; gap: 15px; }
-        .asset-icon { font-size: 1.8rem; background: var(--dark); padding: 12px; border-radius: 10px; border: 1px solid var(--border); }
-        .asset-title { margin: 0 0 5px 0; font-size: 1.1rem; font-weight: 700; color: var(--light); line-height: 1.2; }
-        .asset-cost { color: var(--warning); font-weight: 800; font-size: 1rem; font-family: monospace;}
+        .asset-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .asset-title-group { display: flex; align-items: center; gap: 12px; }
+        .asset-icon { font-size: 1.6rem; background: var(--dark); padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
+        .asset-title { margin: 0 0 4px 0; font-size: 1.05rem; font-weight: 700; color: var(--light); line-height: 1.2; }
         
-        .type-badge { font-size: 0.65rem; padding: 4px 10px; border-radius: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .asset-cost-wrapper { display: flex; flex-direction: column; align-items: flex-start;}
+        .asset-cost { color: var(--warning); font-weight: 800; font-size: 1rem; font-family: monospace; transition: all 0.3s;}
+        
+        .badge-container { display: flex; flex-direction: column; gap: 5px; align-items: flex-end;}
+        .type-badge { font-size: 0.65rem; padding: 4px 8px; border-radius: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .focus-badge { font-size: 0.65rem; padding: 4px 8px; border-radius: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        
         .badge-push { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
         .badge-pull { background: rgba(6, 182, 212, 0.15); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.3); }
+        .badge-focus-all { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-focus-prem { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge-focus-sp { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
 
         .asset-stats {
             background: var(--dark);
@@ -149,9 +194,7 @@
             font-size: 0.8rem;
             color: var(--text-muted);
             margin-bottom: 15px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            text-align: center;
         }
 
         .stat-highlight { color: var(--light); font-weight: 700; }
@@ -161,7 +204,7 @@
             align-items: center;
             justify-content: space-between;
             background: rgba(0,0,0,0.3);
-            padding: 6px 6px;
+            padding: 6px;
             border-radius: 10px;
             border: 1px solid var(--border);
         }
@@ -174,11 +217,10 @@
         .limit-warning { color: var(--warning); font-size: 0.75rem; text-align: center; margin-top: 10px; height: 14px; font-weight: 600;}
         .limit-reached { color: var(--danger); }
 
-        /* Final ROI Box */
         .roi-box {
             background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 182, 212, 0.15));
             border: 1px solid var(--success);
-            padding: 22px;
+            padding: 20px;
             border-radius: 10px;
             text-align: center;
             position: relative;
@@ -188,92 +230,119 @@
         .roi-box::before {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--success);
         }
+
+        .category-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .cat-box {
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
         <div>
-            <h1>Master Deployment Engine</h1>
-            <div class="subtitle">Push/Pull Synergy • Haryana Market Simulation</div>
+            <h1>Portfolio Optimization Engine</h1>
+            <div class="subtitle">Targeted Asset Deployment • Jishnu Das</div>
         </div>
         <div style="text-align: right;">
             <div class="subtitle" style="color: var(--text-muted);">Baseline Metric</div>
-            <div style="font-weight: 900; font-size: 1.3rem; color: var(--success);">₹48 / Premium Case</div>
+            <div id="headerMarginText" style="font-weight: 900; font-size: 1.3rem; color: var(--success);">₹48 / Case</div>
         </div>
     </div>
 
     <div class="dashboard-grid">
         <div class="metrics-panel">
-            <div class="budget-input-group">
-                <div class="metric-label">Annual Capital Budget (₹)</div>
-                <input type="number" id="totalBudget" value="1000000" step="50000" min="0" onchange="calculate()">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="budget-input-group">
+                    <div class="metric-label">Annual P&L Budget (₹)</div>
+                    <input type="number" id="totalBudget" value="1500000" step="50000" min="0" onchange="calculate()">
+                </div>
+                <div class="budget-input-group">
+                    <div class="metric-label">Margin/Case (₹)</div>
+                    <input type="number" id="profitPerCase" value="48" step="1" min="1" onchange="calculate()">
+                </div>
             </div>
             
-            <div class="sub-val" style="margin-top:-10px; font-size: 1rem;">
-                <span>Remaining: <strong id="remainingVal" style="color:var(--success);">₹1,000,000</strong></span>
-                <span>Spent: <strong id="spentVal">₹0</strong></span>
-            </div>
-
-            <div class="metric-group mg-push">
-                <div class="metric-label">Secured Base (Stocking / Push)</div>
-                <div class="metric-val" id="baseVolVal" style="color: #a78bfa;">5,000 <span style="font-size:1rem; color:var(--text-muted); font-weight: 600;">Cases</span></div>
-                <div class="sub-val">
-                    <span>Organic: 5,000</span>
-                    <span>Incentivized: <strong id="pushIncentiveVal" style="color:var(--light);">+0</strong></span>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="budget-input-group">
+                    <div class="metric-label">Organic Base (Cases)</div>
+                    <input type="number" id="organicBase" value="5000" step="500" min="0" onchange="calculate()">
+                </div>
+                <div class="budget-input-group">
+                    <div class="metric-label">Organic SP Mix (%)</div>
+                    <input type="number" id="organicSPMix" value="20" step="1" min="0" max="100" onchange="calculate()">
                 </div>
             </div>
 
-            <div class="metric-group mg-pull">
-                <div class="metric-label">Asset Uplift (Visibility / Pull)</div>
-                <div class="metric-val" id="assetUpliftVal" style="color: #22d3ee;">+0 <span style="font-size:1rem; color:var(--text-muted); font-weight: 600;">Cases</span></div>
-                <div class="sub-val">
-                    <span>Visibility Multiplier: <strong id="multiplierVal" style="color:var(--light);">1.00x</strong></span>
-                    <span>SP Mix Shift: <strong id="spShiftVal" style="color:var(--warning);">+0.00%</strong></span>
+            <div class="switch-container">
+                <div class="switch-text">
+                    <div class="switch-title">Amortize CapEx Assets</div>
+                    <div class="switch-sub">Spreads physical asset costs over 3 years</div>
                 </div>
+                <label class="switch">
+                    <input type="checkbox" id="amortizeToggle" onchange="calculate()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="sub-val" style="border-top: 1px solid var(--border); padding-top: 15px;">
+                <span>Remaining: <strong id="remainingVal" style="color:var(--success); font-size: 1.1rem;">₹1,500,000</strong></span>
+                <span>Annualized Spend: <strong id="spentVal" style="font-size: 1.1rem;">₹0</strong></span>
             </div>
 
-            <div class="insight-box" id="insightBox">
-                <div class="insight-icon">💡</div>
-                <div id="insightText">Allocate capital to see real-time strategic analysis of your Push/Pull ratio.</div>
+            <div class="metric-group mg-split">
+                <div class="metric-label">Projected Portfolio Volume</div>
+                <div class="category-split">
+                    <div class="cat-box" style="border-bottom: 2px solid var(--premium);">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Premium</div>
+                        <div style="font-size: 0.65rem; color: #f87171;">Budweiser / Magnum</div>
+                        <div id="premiumVol" style="font-size: 1.4rem; font-weight: bold; color: var(--light); margin-top: 5px;">4,000</div>
+                    </div>
+                    <div class="cat-box" style="border-bottom: 2px solid var(--super-premium);">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Super Premium</div>
+                        <div style="font-size: 0.65rem; color: #fbbf24;">Corona / Hoegaarden</div>
+                        <div id="spVol" style="font-size: 1.4rem; font-weight: bold; color: var(--light); margin-top: 5px;">1,000</div>
+                    </div>
+                </div>
+                <div class="sub-val" style="margin-top: 12px;">
+                    <span>Overall SP Mix: <strong id="newSpMixVal" style="color:var(--super-premium);">20.00%</strong></span>
+                    <span>Total Volume: <strong id="totalVolVal" style="color:var(--light);">5,000</strong></span>
+                </div>
             </div>
 
             <div class="roi-box">
-                <div class="metric-label">Projected Final Volume</div>
-                <div class="metric-val" id="totalVolVal" style="font-size: 2.8rem;">5,000</div>
-                <hr style="border-color: rgba(255,255,255,0.1); margin: 18px 0;">
-                <div class="metric-label">Net Financial ROI</div>
+                <div class="metric-label">Net Incremental Cases</div>
+                <div class="metric-val" id="incrementalVolVal" style="font-size: 2.2rem; color: var(--info);">0</div>
+                <hr style="border-color: rgba(255,255,255,0.1); margin: 15px 0;">
+                <div class="metric-label">Annualized Financial ROI</div>
                 <div class="metric-val" id="roiVal" style="color: var(--success);">0.0%</div>
             </div>
         </div>
 
         <div class="asset-grid" id="assetContainer">
-            </div>
+        </div>
     </div>
 
 <script>
-    // CORE DATA MODEL (With strict Market Caps and Decay Rates)
-    const ORGANIC_BASE_VOLUME = 5000;
-    
-    // Updated Profit Per Case to 48 INR
-    const PROFIT_PER_CASE = 48; 
-    const MARKET_SIZE = 117; // Strict Haryana Tracker size
+    const MARKET_SIZE = 117; 
 
     const assets = [
-        // PUSH (Base Volume)
-        { id: 'bud4trade', type: 'push', name: 'Bud4Trade Payout (100cs)', cost: 4800, yield: 100, spShift: 0.1, max: 117, decay: 1.0, icon: '💵', qty: 0 },
-        { id: 'trip', type: 'push', name: 'Intl. Match Trip Reward', cost: 500000, yield: 1500, spShift: 5.0, max: 5, decay: 0.9, icon: '✈️', qty: 0 },
-        
-        // PULL (Multipliers)
-        { id: 'chiller', type: 'pull', name: 'Premium Chiller', cost: 40000, yield: 0.12, spShift: 0.5, max: 50, decay: 0.95, icon: '❄️', qty: 0 },
-        { id: 'booth', type: 'pull', name: 'Hoegaarden Booth', cost: 50000, yield: 0.08, spShift: 2.5, max: 20, decay: 0.92, icon: '🏪', qty: 0 },
-        { id: 'neon', type: 'pull', name: 'Neon Sign + Install', cost: 15000, yield: 0.05, spShift: 0.2, max: 80, decay: 0.96, icon: '💡', qty: 0 },
-        
-        // Updated Corona Chiller Mask Cost to 100,000 INR
-        { id: 'mask', type: 'pull', name: 'Corona Chiller Mask', cost: 100000, yield: 0.03, spShift: 1.5, max: 40, decay: 0.94, icon: '🛡️', qty: 0 },
-        
-        { id: 'wc', type: 'pull', name: 'World Cup Campaign', cost: 8500, yield: 0.04, spShift: 0.1, max: 80, decay: 0.98, icon: '🏆', qty: 0 },
-        { id: 'trolley', type: 'pull', name: 'Branded Trolley', cost: 5000, yield: 0.02, spShift: 0.8, max: 60, decay: 0.97, icon: '🛒', qty: 0 }
+        { id: 'bud4trade', type: 'push', focus: 'all', name: 'Bud4Trade Payout (100cs)', cost: 4800, yield: 100, max: 117, decay: 1.0, isCapEx: false, icon: '💵', qty: 0 },
+        { id: 'trip', type: 'push', focus: 'all', name: 'Intl. Match Trip Reward', cost: 500000, yield: 1500, max: 5, decay: 0.9, isCapEx: false, icon: '✈️', qty: 0 },
+        { id: 'chiller', type: 'pull', focus: 'premium', name: 'Premium Chiller', cost: 40000, yield: 0.12, max: 50, decay: 0.95, isCapEx: true, icon: '❄️', qty: 0 },
+        { id: 'booth', type: 'pull', focus: 'super-premium', name: 'Hoegaarden Booth', cost: 50000, yield: 0.15, max: 20, decay: 0.92, isCapEx: true, icon: '🏪', qty: 0 },
+        { id: 'neon', type: 'pull', focus: 'all', name: 'Neon Signage', cost: 15000, yield: 0.05, max: 80, decay: 0.96, isCapEx: true, icon: '💡', qty: 0 },
+        { id: 'mask', type: 'pull', focus: 'super-premium', name: 'Corona Chiller Masking', cost: 100000, yield: 0.10, max: 40, decay: 0.94, isCapEx: true, icon: '🛡️', qty: 0 },
+        { id: 'wc', type: 'pull', focus: 'premium', name: 'World Cup Campaign', cost: 15000, yield: 0.08, max: 80, decay: 0.98, isCapEx: false, icon: '🏆', qty: 0 },
+        { id: 'trolley', type: 'pull', focus: 'super-premium', name: 'Corona Branded Trolleys', cost: 5000, yield: 0.05, max: 60, decay: 0.97, isCapEx: true, icon: '🛒', qty: 0 }
     ];
 
     function init() {
@@ -281,31 +350,48 @@
         
         assets.forEach((asset, index) => {
             const el = document.createElement('div');
-            el.className = `asset-card type-${asset.type}`;
             
-            const badgeClass = asset.type === 'push' ? 'badge-push' : 'badge-pull';
-            const badgeText = asset.type === 'push' ? 'Stocking (Push)' : 'Visibility (Pull)';
+            let focusClass = 'focus-all';
+            let focusBadgeClass = 'badge-focus-all';
+            let focusText = 'All Portfolio';
+            
+            if (asset.focus === 'premium') {
+                focusClass = 'focus-premium';
+                focusBadgeClass = 'badge-focus-prem';
+                focusText = 'Premium Focus';
+            } else if (asset.focus === 'super-premium') {
+                focusClass = 'focus-super-premium';
+                focusBadgeClass = 'badge-focus-sp';
+                focusText = 'SP Focus';
+            }
+
+            el.className = `asset-card ${focusClass}`;
+            
+            const badgeTypeClass = asset.type === 'push' ? 'badge-push' : 'badge-pull';
+            const badgeTypeText = asset.type === 'push' ? 'Stocking' : 'Visibility';
             
             let statHtml = asset.type === 'push' 
-                ? `<div>Base Injection:<br><span class="stat-highlight">+${asset.yield} Cases</span></div>`
-                : `<div>Base Multiplier:<br><span class="stat-highlight">+${(asset.yield * 100).toFixed(0)}%</span></div>`;
+                ? `<div>Base Volume Injection:<br><span class="stat-highlight">+${asset.yield} Cases</span></div>`
+                : `<div>Category Volume Multiplier:<br><span class="stat-highlight">+${(asset.yield * 100).toFixed(0)}%</span></div>`;
 
             el.innerHTML = `
                 <div>
                     <div class="asset-header">
                         <div class="asset-title-group">
                             <div class="asset-icon">${asset.icon}</div>
-                            <div>
+                            <div class="asset-cost-wrapper">
                                 <h3 class="asset-title">${asset.name}</h3>
-                                <div class="asset-cost">₹${asset.cost.toLocaleString('en-IN')}</div>
+                                <div class="asset-cost" id="cost-display-${index}">₹${asset.cost.toLocaleString('en-IN')}</div>
                             </div>
                         </div>
-                        <div class="type-badge ${badgeClass}">${badgeText}</div>
+                        <div class="badge-container">
+                            <div class="type-badge ${badgeTypeClass}">${badgeTypeText}</div>
+                            <div class="focus-badge ${focusBadgeClass}">${focusText}</div>
+                        </div>
                     </div>
                     
                     <div class="asset-stats">
                         ${statHtml}
-                        <div>SP Shift:<br><span class="stat-highlight">+${asset.spShift}%</span></div>
                     </div>
                 </div>
 
@@ -334,63 +420,49 @@
         }
     }
 
-    function generateInsight(spentPush, spentPull, totalSpent) {
-        const box = document.getElementById('insightBox');
-        const text = document.getElementById('insightText');
-        const icon = document.querySelector('.insight-icon');
-
-        if (totalSpent === 0) {
-            text.innerText = "Allocate capital to see real-time strategic analysis of your Push/Pull ratio.";
-            box.style.borderColor = "var(--border)";
-            icon.innerText = "💡";
-            return;
-        }
-
-        const pushRatio = spentPush / totalSpent;
-        const pullRatio = spentPull / totalSpent;
-
-        if (pullRatio > 0.7) {
-            text.innerHTML = "<strong>High Visibility Risk:</strong> You are over-leveraged on Pull assets. Visibility is high, but outlets lack incentivized stock to meet demand.";
-            box.style.borderColor = "var(--warning)";
-            icon.innerText = "⚠️";
-        } else if (pushRatio > 0.7) {
-            text.innerHTML = "<strong>High Stocking Risk:</strong> You are over-leveraged on Push assets. Stock is secure, but lack of visibility assets will lead to slow off-take.";
-            box.style.borderColor = "var(--warning)";
-            icon.innerText = "⚠️";
-        } else {
-            text.innerHTML = "<strong>Optimal Synergy:</strong> Capital is effectively balanced between securing baseline availability and driving consumer visibility.";
-            box.style.borderColor = "var(--success)";
-            icon.innerText = "✅";
-        }
-    }
-
     function calculate() {
         const totalBudget = parseInt(document.getElementById('totalBudget').value) || 0;
-        let spent = 0;
-        let spentPush = 0;
-        let spentPull = 0;
+        const profitPerCase = parseInt(document.getElementById('profitPerCase').value) || 0;
+        const organicBaseVolume = parseInt(document.getElementById('organicBase').value) || 0;
+        const organicSPMix = parseInt(document.getElementById('organicSPMix').value) || 0;
+        const isAmortized = document.getElementById('amortizeToggle').checked;
+
+        document.getElementById('headerMarginText').innerText = `₹${profitPerCase.toLocaleString('en-IN')} / Case`;
+        
+        const spRatio = Math.min(Math.max(organicSPMix, 0), 100) / 100;
+        const premRatio = 1 - spRatio;
+        
+        let totalAnnualizedSpend = 0;
         
         let pushVolume = 0;
-        let pullMultiplier = 0;
-        let totalSpShift = 0;
+        let pullMultiplierPrem = 0;
+        let pullMultiplierSP = 0;
 
         assets.forEach((asset, index) => {
-            const assetSpent = asset.cost * asset.qty;
-            spent += assetSpent;
-            
-            if (asset.type === 'push') spentPush += assetSpent;
-            if (asset.type === 'pull') spentPull += assetSpent;
+            let effectiveCost = asset.cost;
+            if (isAmortized && asset.isCapEx) {
+                effectiveCost = asset.cost / 3;
+                document.getElementById(`cost-display-${index}`).innerHTML = `₹${Math.round(effectiveCost).toLocaleString('en-IN')} <span style="font-size: 0.7rem; color: #94a3b8;">/yr</span>`;
+            } else {
+                document.getElementById(`cost-display-${index}`).innerHTML = `₹${asset.cost.toLocaleString('en-IN')}`;
+            }
+
+            const assetSpent = effectiveCost * asset.qty;
+            totalAnnualizedSpend += assetSpent;
             
             if (asset.qty > 0) {
                 if (asset.type === 'push') {
                     for (let i = 0; i < asset.qty; i++) { pushVolume += asset.yield * Math.pow(asset.decay, i); }
-                } else {
-                    for (let i = 0; i < asset.qty; i++) { pullMultiplier += asset.yield * Math.pow(asset.decay, i); }
+                } else if (asset.type === 'pull') {
+                    let multiplierValue = 0;
+                    for (let i = 0; i < asset.qty; i++) { multiplierValue += asset.yield * Math.pow(asset.decay, i); }
+                    
+                    if (asset.focus === 'premium') pullMultiplierPrem += multiplierValue;
+                    else if (asset.focus === 'super-premium') pullMultiplierSP += multiplierValue;
+                    else { pullMultiplierPrem += multiplierValue; pullMultiplierSP += multiplierValue; }
                 }
-                for (let i = 0; i < asset.qty; i++) { totalSpShift += asset.spShift * Math.pow(0.95, i); }
             }
 
-            // Warning Logic
             const warnEl = document.getElementById(`warn-${index}`);
             if (asset.qty === asset.max) {
                 warnEl.innerText = "MARKET SATURATED";
@@ -404,47 +476,46 @@
             }
         });
 
-        // Synergy Math
-        const securedBaseVolume = ORGANIC_BASE_VOLUME + pushVolume;
-        const totalMultiplier = 1 + pullMultiplier;
-        const finalVolume = securedBaseVolume * totalMultiplier;
-        const assetDrivenUplift = finalVolume - securedBaseVolume;
-        const netIncrementalVolume = finalVolume - ORGANIC_BASE_VOLUME;
+        const remaining = totalBudget - totalAnnualizedSpend;
+        
+        assets.forEach((asset, index) => {
+            let effectiveCost = (isAmortized && asset.isCapEx) ? (asset.cost / 3) : asset.cost;
+            document.getElementById(`add-${index}`).disabled = (effectiveCost > remaining || asset.qty >= asset.max);
+            document.getElementById(`sub-${index}`).disabled = (asset.qty === 0);
+        });
 
-        // UI Updates
-        const remaining = totalBudget - spent;
-        document.getElementById('spentVal').innerText = `₹${spent.toLocaleString('en-IN')}`;
+        const securedTotalBase = organicBaseVolume + pushVolume;
+        const securedPremBase = securedTotalBase * premRatio;
+        const securedSPBase = securedTotalBase * spRatio;
+
+        const finalPremVolume = securedPremBase * (1 + pullMultiplierPrem);
+        const finalSPVolume = securedSPBase * (1 + pullMultiplierSP);
+
+        const finalTotalVolume = finalPremVolume + finalSPVolume;
+        const netIncrementalVolume = finalTotalVolume - organicBaseVolume;
+        const newSpMix = finalTotalVolume > 0 ? (finalSPVolume / finalTotalVolume) * 100 : 0;
+
+        document.getElementById('spentVal').innerText = `₹${Math.round(totalAnnualizedSpend).toLocaleString('en-IN')}`;
         const remEl = document.getElementById('remainingVal');
-        remEl.innerText = `₹${remaining.toLocaleString('en-IN')}`;
+        remEl.innerText = `₹${Math.round(remaining).toLocaleString('en-IN')}`;
         remEl.style.color = remaining >= 0 ? 'var(--success)' : 'var(--danger)';
 
-        document.getElementById('baseVolVal').innerHTML = `${Math.round(securedBaseVolume).toLocaleString('en-IN')} <span style="font-size:1rem; color:var(--text-muted); font-weight:600;">Cases</span>`;
-        document.getElementById('pushIncentiveVal').innerText = `+${Math.round(pushVolume).toLocaleString('en-IN')}`;
+        document.getElementById('premiumVol').innerText = Math.round(finalPremVolume).toLocaleString('en-IN');
+        document.getElementById('spVol').innerText = Math.round(finalSPVolume).toLocaleString('en-IN');
+        document.getElementById('totalVolVal').innerText = Math.round(finalTotalVolume).toLocaleString('en-IN');
+        document.getElementById('incrementalVolVal').innerText = `+${Math.round(netIncrementalVolume).toLocaleString('en-IN')}`;
         
-        document.getElementById('assetUpliftVal').innerHTML = `+${Math.round(assetDrivenUplift).toLocaleString('en-IN')} <span style="font-size:1rem; color:var(--text-muted); font-weight:600;">Cases</span>`;
-        document.getElementById('multiplierVal').innerText = `${totalMultiplier.toFixed(2)}x`;
-        document.getElementById('spShiftVal').innerText = `+${totalSpShift.toFixed(2)}%`;
+        document.getElementById('newSpMixVal').innerText = `${newSpMix.toFixed(2)}%`;
 
-        document.getElementById('totalVolVal').innerText = Math.round(finalVolume).toLocaleString('en-IN');
-
-        generateInsight(spentPush, spentPull, spent);
-
-        // ROI
         let roi = 0;
-        if (spent > 0) {
-            const projectedRevenue = netIncrementalVolume * PROFIT_PER_CASE;
-            roi = ((projectedRevenue - spent) / spent) * 100;
+        if (totalAnnualizedSpend > 0) {
+            const projectedRevenue = netIncrementalVolume * profitPerCase;
+            roi = ((projectedRevenue - totalAnnualizedSpend) / totalAnnualizedSpend) * 100;
         }
 
         const roiEl = document.getElementById('roiVal');
         roiEl.innerText = `${roi.toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1})}%`;
         roiEl.style.color = roi < 0 ? 'var(--danger)' : 'var(--success)';
-
-        // Constraints
-        assets.forEach((asset, index) => {
-            document.getElementById(`add-${index}`).disabled = (asset.cost > remaining || asset.qty >= asset.max);
-            document.getElementById(`sub-${index}`).disabled = (asset.qty === 0);
-        });
     }
 
     window.onload = init;
